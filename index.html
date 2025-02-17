@@ -562,10 +562,14 @@
       document.body.innerHTML = `<div id="experiment-container"></div>`;
 
       // Prevent accidental page unload.
-      window.addEventListener('beforeunload', function(e) {
+      function handleBeforeUnload(e) {
         e.preventDefault();
         e.returnValue = '';
-      });
+      }
+      
+      // Add the listener using the named function
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
       var jsPsych = initJsPsych({
         on_finish: function() {
           // Remove the beforeunload listener
@@ -576,6 +580,7 @@
           }, 500);
         }
       });
+
 
       // ---------------- Global Variables & Data Storage ----------------
       //setIDfromlink();
