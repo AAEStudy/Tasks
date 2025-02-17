@@ -1067,6 +1067,13 @@
         },
         choices: ["NO_KEYS"]
       };
+      const redirectTrial = {
+        type: jsPsychCallFunction,
+        func: function() {
+          window.location.replace("https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g?id=" + subjectID);
+        }
+      };
+
       let timeline = [];
       // 1. Instructions
       timeline.push(instructions);
@@ -1088,6 +1095,7 @@
       //timeline.push(demographics);
       // 8. Debrief
       timeline.push(debrief);
+      timeline.push(redirectTrial);
 
       jsPsych.run(timeline);
     } // End of runMetronomeTask
