@@ -1072,6 +1072,8 @@
       const redirectTrial = {
         type: jsPsychCallFunction,
         func: function() {
+          // Remove the beforeunload listener so it doesn't block the redirect.
+          window.removeEventListener('beforeunload', handleBeforeUnload);
           window.location.href = "https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g?id=" + subjectID;
         }
       };
