@@ -49,6 +49,11 @@
       }
       document.body.innerHTML = "";
     }
+    // Prevent accidental page unload.
+    function handleBeforeUnload(e) {
+        e.preventDefault();
+        e.returnValue = '';
+      };
 
     /***********************
      * MEDITATION TASK CODE
@@ -560,12 +565,6 @@
         </style>
       `;
       document.body.innerHTML = `<div id="experiment-container"></div>`;
-
-      // Prevent accidental page unload.
-      function handleBeforeUnload(e) {
-        e.preventDefault();
-        e.returnValue = '';
-      };
       
       // Add the listener using the named function
       window.addEventListener('beforeunload', handleBeforeUnload);
