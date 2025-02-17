@@ -561,7 +561,7 @@
       `;
       document.body.innerHTML = `<div id="experiment-container"></div>`;
 
-      Prevent accidental page unload.
+      // Prevent accidental page unload.
       window.addEventListener('beforeunload', function(e) {
         e.preventDefault();
         e.returnValue = '';
@@ -1065,18 +1065,8 @@
                     //   Download Data
                     // </button>
         },
-        choices: ["NO_KEYS"],
-        trial_duration: 5000  // trial will end after 5 seconds
-        
+        choices: ["NO_KEYS"]
       };
-      // const redirectTrial = {
-      //   type: jsPsychCallFunction,
-      //   func: function() {
-      //     // Remove the beforeunload listener so it doesn't block the redirect.
-      //     //window.removeEventListener('beforeunload', handleBeforeUnload);
-      //     window.location.href = "https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g?id=" + subjectID;
-      //   }
-      // };
       let timeline = [];
       // 1. Instructions
       timeline.push(instructions);
@@ -1099,8 +1089,6 @@
       // 8. Debrief
       timeline.push(debrief);
 
-      //timeline.push(redirectTrial);
-
       jsPsych.run(timeline);
     } // End of runMetronomeTask
 
@@ -1111,4 +1099,3 @@
   </script>
 </body>
 </html>
-
