@@ -565,15 +565,13 @@
       function handleBeforeUnload(e) {
         e.preventDefault();
         e.returnValue = '';
-      }
+      };
       
       // Add the listener using the named function
       window.addEventListener('beforeunload', handleBeforeUnload);
       
       var jsPsych = initJsPsych({
         on_finish: function() {
-          // Remove the beforeunload listener
-          window.removeEventListener('beforeunload', handleBeforeUnload);
           // Add a delay before redirecting.
           setTimeout(function() {
             window.location.replace("https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g");
@@ -1074,13 +1072,16 @@
         stimulus: function() {
           return `<div class="debrief">
                       <p>Do not close this tab. Thank you, the next part of the study will begin shortly.</p>
-                    </div>`;
+                    </div>`
                     // <button onclick="downloadCSV()" style="font-size:18px; padding:10px; background:blue; color:white; border-radius:5px;">
                     //   Download Data
                     // </button>
         },
         choices: ["NO_KEYS"],
         trial_duration: 10000
+        on_finish: function() {
+        // Remove the beforeunload listener once debrief is complete
+          window.removeEventListener('beforeunload', handleBeforeUnload);
       };
       
 
@@ -1105,6 +1106,7 @@
       //timeline.push(demographics);
       // 8. Debrief
       timeline.push(debrief);
+      
 
       jsPsych.run(timeline);
     } // End of runMetronomeTask
