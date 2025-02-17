@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Integrated Experiment</title>
+  <!-- Load jsPsych and required plugins for both tasks -->
+  <script src="js/external/jspsych.js"></script>
+  <script src="js/external/plugin-preload.js"></script>
+  <script src="js/external/plugin-html-keyboard-response.js"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.4"></script>
+  <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe@0.3"></script>
+  <script src="js/external/plugin-html-multi-keyboard-response.js"></script>
+  <script src="js/external/plugin-audio-multi-keyboard-response.js"></script>
+  <script src="js/external/plugin-html-button-response-custom.js"></script>
+  <script src="js/external/plugin-survey-likert.js"></script>
+  <script src="js/external/plugin-survey-html-form.js"></script>
+  <script src="js/scales.js"></script>
+  <link rel="stylesheet" href="css/jspsych.css">
+</head>
+<body>
+  <script>
+    /*********************************************
+     * FULL INTEGRATED EXPERIMENT SCRIPT
+     * 
+     * This file wraps the meditation task and the
+     * metronome task as separate functions.
+     * When the meditation task completes, we wipe
+     * the jsPsych globals and then run the metronome
+     * task.
+     *********************************************/
+
+    /***********************
+     * CLEANUP FUNCTION
+     ***********************/
+    let subjectID = 'subject2';
+    function setIDfromlink(){
+      // Get the full query string from the URL
+      const queryString = window.location.search;
+
+      // Parse the query string
+      const urlParams = new URLSearchParams(queryString);
+      const subjectID = 'subject2';
+      // Extract the subjectId parameter (make sure the parameter name matches what Qualtrics sends)
+      
+      //uncomment this line to get id from link
+      //const subjectID = urlParams.get('subjectID');
+
+      // Check if subjectId exists; if not, you might want to handle the error
+      if (!subjectID) {
+        console.error("No subjectId found in the URL!");
+      } else {
+        console.log("Subject ID:", subjectID);
+      }
+    }
+   
+
+    // You can now use 'subjectId' in your jsPsych timeline or data object as needed.
+
+    function cleanupJsPsych() {
+      // Remove the jsPsych instance and clear the experiment container.
+      if (window.jsPsych) {
+        window.jsPsych = null;
+      }
+      document.body.innerHTML = "";
+    }
+
+    /***********************
+     * MEDITATION TASK CODE
+     ***********************/
+    function runMeditationTask() {
+      // Set up the head and body for the meditation experiment.
+      document.head.innerHTML = `
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="css/jspsych.css">
+        <style>
+          p { max-width: 750px; text-align: left; color: white; }
+          h { max-width: 750px; text-align: right; color: white; font-size: 50px; }
+          body { background-color: black; }
+          strong { color: white; font-weight: bold; text-decoration: underline; }
+        </style>
+      `;
+      document.body.innerHTML = `<div id="experiment-container"></div>`;
+
+      /****************************************************
+       *              MEDITATION TASK CODE
+       ****************************************************/
+      // ---------------- Experiment-wide variables ----------------
+      //setIDfromlink();
+      const JSPYSCHPIPE_ID = "CEasZZbmyoOh";
+      let total_exp_time = 1000 * 60 * 2; // 2 minutes
+      let pauses = 0;
+      let pause = false;
+      let is_self_caught = false;
+      let do_probe = false;
+      let start_time = 0;
+      let true_elapsed_time = 0;
+      let effective_elapsed_time = 0;
+      let accumulated_pause_time = 0;
+      let accumulated_probe_time = 0;
+      let pause_start = 0;
+      let probe_start = 0;
+      let probeData = [];
+      let block_times = [];
+      let curr_bell = 0;
+      let probe_type = "SELF";
+
+      // Generate random bell times.
+      {
+        let r = Math.random();
+        let min_time = 1 * 60 * 1000; // 1 minute
+        let extra_time = 0.6 * 60 * 1000;
+        let time = min_time + extra_time * r;
+        block_times.push(time);
+        for (let i = 0; i < 4; i++) {
+          let r = Math.random();
+          let min_time = 1 * 60 * 1000;
+          let time = block_times[i] + min_time + extra_time * r;
+          extra_time += 1.6 * 60 * 1000 - (min_time + extra_time * r);
+          block_times.push(time);
+        }
+        block_times.push(9.5 * 60 * 1000);
+        console.log("Bell times (ms):", block_times);
+      }
+
+      // ---------------- Texts & Instructions ----------------
+      let instructions = `<p>
+          For the next ~10 minutes, you will meditate on your own without the guidance of an audio tape.
+          <br><br>
+          Remain broadly focused on present moment experiences (e.g. physical sensations and feelings) and accept them as they arise.
+          <br>
+          Apply the skills and experiences from your mindfulness training as best you can.
+          <br><br>
+          If you get distracted by an external event, press 'P' to pause the experiment.
+          <br>
+          (Note: Pausing more than three times may invalidate your data.)
+          <br><br>
+          A bell will play at random intervals and we will ask you a few questions.
+          <br>
+          Press 'S' now to play the bell sound for volume adjustment.
+          <br><br>
+          Press space to begin,
+          <br>
+          Press 'M' if you catch yourself mind-wandering.
+        </p>`;
+      let main_instructions = `<p>
+          <br><br><br><br><br><br><br><br>
+          Close your eyes and remain focused on the present moment.
+          <br>
+          Press 'M' if you catch yourself mind-wandering.
+          <br>
+        </p>`;
+      let wanderHTML = `<p>
+          Just now, what were you focused on?
+          <br>
+          1. Focused on the present moment
+          <br>
+          2. Focused on something else
+        </p>`;
+      let contentHTML = `<p>
+          Was the content of your mind-wandering?
+          <br>
+          1. Positive
+          <br>
+          2. Neutral
+          <br>
+          3. Negative
+        </p>`;
+      let categoryHTML = `<p>
+          Which category does it fall under?
+          <br>
+          1. Thoughts about the past
+          <br>
+          2. Thoughts about the future
+          <br>
+          3. Thoughts about current emotions/sensations
+          <br>
+          4. Something else
+        </p>`;
+
+      // ---------------- Initialize jsPsych ----------------
+      const jsPsych = initJsPsych({
+        on_finish: function () {
+          console.log("Meditation experiment finished.");
+          // When finished, clean up all jsPsych-related data and run the metronome task.
+          cleanupJsPsych();
+          runMetronomeTask();
+        }
+      });
+      //const subjectID = jsPsych.randomization.randomID(10);
+      //console.log("subjectID:", subjectID);
+
+      // ---------------- Utility Functions ----------------
+      function formatTimeShort(ms) {
+        let totalSec = Math.floor(ms / 1000);
+        let minutes = Math.floor(totalSec / 60);
+        let seconds = totalSec % 60;
+        return minutes + ":" + (seconds < 10 ? "0" + seconds : seconds);
+      }
+      function play_bell() {
+        const audio = new Audio('./bell.wav');
+        audio.play();
+      }
+      function createEmptyRow() {
+        return {
+          "ParticipantID": subjectID,
+          "type": "",
+          "focus": "",
+          "content": "",
+          "category": "",
+          "event_time": "",
+          "mw_selfcaught": 0,
+          "Self_Caught_MW Total": 0,
+          "Self-Caught Positive": 0,
+          "Self-Caught Neutral": 0,
+          "Self-Caught Negative": 0,
+          "Self-Caught Past": 0,
+          "Self-Caught Future": 0,
+          "Self-Caught Current Emotions/Sensations": 0,
+          "Self-Caught Something Else": 0,
+          "Probe_Caught Mind-Wandering": 0,
+          "Probe-Caught Positive": 0,
+          "Probe-Caught Neutral": 0,
+          "Probe-Caught Negative": 0,
+          "Probe-Caught Mindful": 0,
+          "Probe-Caught Past": 0,
+          "Probe-Caught Future": 0,
+          "Probe-Caught Current Emotions/Sensations": 0,
+          "Probe-Caught Something Else": 0,
+          "pauses": 0,
+          "probe_duration": "",
+          "pause_duration": ""
+        };
+      }
+      function convertWideDataToCSV(dataArray) {
+        let columns = [
+          "ParticipantID","type","focus","content","category","event_time","mw_selfcaught",
+          "Self_Caught_MW Total","Self-Caught Positive","Self-Caught Neutral","Self-Caught Negative",
+          "Self-Caught Past","Self-Caught Future","Self-Caught Current Emotions/Sensations","Self-Caught Something Else",
+          "Probe_Caught Mind-Wandering","Probe-Caught Positive","Probe-Caught Neutral","Probe-Caught Negative",
+          "Probe-Caught Mindful","Probe-Caught Past","Probe-Caught Future","Probe-Caught Current Emotions/Sensations","Probe-Caught Something Else",
+          "pauses",
+          "probe_duration",
+          "pause_duration"
+        ];
+        let header = columns.join(",");
+        let csvRows = [header];
+        dataArray.forEach(rowObj => {
+          let row = columns.map(colName => rowObj[colName]);
+          csvRows.push(row.join(","));
+        });
+        return csvRows.join("\n");
+      }
+      function get_data_to_send() {
+        return convertWideDataToCSV(probeData);
+      }
+      function getEffectiveTimeMS() {
+        return (Date.now() - start_time) - (accumulated_pause_time + accumulated_probe_time);
+      }
+
+      // ---------------- Probe Timeline Nodes ----------------
+      let probeOnset = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "",
+        choices: "NO_KEYS",
+        trial_duration: 1,
+        on_start: function() {
+          probe_start = Date.now();
+        }
+      };
+      let wanderNode = {
+        timeline: [{
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: wanderHTML,
+          choices: ["1","2"],
+          trial_duration: null,
+          data: { trial_id: "wander" }
+        }],
+        conditional_function: function(){
+          return (probe_type === "PROBE");
+        }
+      };
+      let contentNode = {
+        timeline: [{
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: contentHTML,
+          choices: ["1","2","3"],
+          trial_duration: null,
+          data: { trial_id: "content" }
+        }],
+        conditional_function: function(){
+          if(probe_type === "SELF"){
+            return true;
+          } else {
+            let lastWander = jsPsych.data.get().filter({ trial_id: "wander" }).last(1).values()[0];
+            return (lastWander && lastWander.response === "2");
+          }
+        }
+      };
+      let categoryNode = {
+        timeline: [{
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: categoryHTML,
+          choices: ["1","2","3","4"],
+          trial_duration: null,
+          data: { trial_id: "category" }
+        }],
+        conditional_function: function(){
+          if(probe_type === "SELF"){
+            return true;
+          } else {
+            let lastWander = jsPsych.data.get().filter({ trial_id: "wander" }).last(1).values()[0];
+            return (lastWander && lastWander.response === "2");
+          }
+        }
+      };
+      let finalizeNode = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "",
+        choices: "NO_KEYS",
+        trial_duration: 1,
+        on_start: function() {
+          let probe_duration_ms = Date.now() - probe_start;
+          accumulated_probe_time += probe_duration_ms;
+          let row = createEmptyRow();
+          row.type = (probe_type === "PROBE") ? "Probe" : "Self-Report";
+          if(probe_type === "PROBE") {
+            let lastWander = jsPsych.data.get().filter({ trial_id: "wander" }).last(1).values()[0];
+            if(lastWander){
+              row.focus = (lastWander.response === "1") ? "Present" : "Mind-wandering";
+            }
+          } else {
+            row.focus = "";
+          }
+          let lastContent = jsPsych.data.get().filter({ trial_id: "content" }).last(1).values()[0];
+          let lastCategory = jsPsych.data.get().filter({ trial_id: "category" }).last(1).values()[0];
+          let contentMap = {"1":"Positive","2":"Neutral","3":"Negative"};
+          let categoryMap = {"1":"Past","2":"Future","3":"Current Emotions/Sensations","4":"Something Else"};
+          if((probe_type === "PROBE" && row.focus === "Mind-wandering") || probe_type === "SELF"){
+            if(lastContent){
+              row.content = contentMap[lastContent.response] || "";
+            }
+            if(lastCategory){
+              row.category = categoryMap[lastCategory.response] || "";
+            }
+          }
+          let endTime = getEffectiveTimeMS();
+          row.event_time = formatTimeShort(endTime);
+          row.probe_duration = (probe_duration_ms / 1000).toFixed(2);
+          if(probe_type === "SELF"){
+            row.mw_selfcaught = 1;
+            row["Self_Caught_MW Total"] = 1;
+            if(row.content === "Positive"){
+              row["Self-Caught Positive"] = 1;
+            } else if(row.content === "Neutral"){
+              row["Self-Caught Neutral"] = 1;
+            } else if(row.content === "Negative"){
+              row["Self-Caught Negative"] = 1;
+            }
+            if(row.category === "Past"){
+              row["Self-Caught Past"] = 1;
+            } else if(row.category === "Future"){
+              row["Self-Caught Future"] = 1;
+            } else if(row.category === "Current Emotions/Sensations"){
+              row["Self-Caught Current Emotions/Sensations"] = 1;
+            } else if(row.category === "Something Else"){
+              row["Self-Caught Something Else"] = 1;
+            }
+          } else {
+            if(row.focus === "Present"){
+              row["Probe-Caught Mindful"] = 1;
+            } else if(row.focus === "Mind-wandering"){
+              row["Probe_Caught Mind-Wandering"] = 1;
+              if(row.content === "Positive"){
+                row["Probe-Caught Positive"] = 1;
+              } else if(row.content === "Neutral"){
+                row["Probe-Caught Neutral"] = 1;
+              } else if(row.content === "Negative"){
+                row["Probe-Caught Negative"] = 1;
+              }
+              if(row.category === "Past"){
+                row["Probe-Caught Past"] = 1;
+              } else if(row.category === "Future"){
+                row["Probe-Caught Future"] = 1;
+              } else if(row.category === "Current Emotions/Sensations"){
+                row["Probe-Caught Current Emotions/Sensations"] = 1;
+              } else if(row.category === "Something Else"){
+                row["Probe-Caught Something Else"] = 1;
+              }
+            }
+          }
+          probeData.push(row);
+        }
+      };
+      let resetProbeNode = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "",
+        choices: "NO_KEYS",
+        trial_duration: 1,
+        on_start: function() {
+          probe_start = 0;
+          do_probe = false;
+        }
+      };
+      function create_probe_timeline() {
+        return {
+          timeline: [
+            probeOnset,
+            wanderNode,
+            contentNode,
+            categoryNode,
+            finalizeNode,
+            resetProbeNode
+          ],
+          conditional_function: function() {
+            return do_probe;
+          }
+        };
+      }
+      function create_pause_trial() {
+        let pause_trial = {
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: "<p style='text-align:center;font-size:100px;'>⏸️</p><p><br>Press <strong>[P]</strong> to continue.</p>",
+          choices: ["p"],
+          on_start: function () {
+            pauses++;
+            pause_start = Date.now();
+          },
+          on_finish: function () {
+            let pauseDuration = Date.now() - pause_start;
+            accumulated_pause_time += pauseDuration;
+            let row = createEmptyRow();
+            row.type = "Pause";
+            row.pauses = pauses;
+            row.pause_duration = (pauseDuration / 1000).toFixed(2);
+            let endTime = getEffectiveTimeMS();
+            row.event_time = formatTimeShort(endTime);
+            probeData.push(row);
+            pause = false;
+          }
+        };
+        return {
+          timeline: [pause_trial],
+          conditional_function: function () {
+            return pause;
+          }
+        };
+      }
+      function get_main_instructions() {
+        return "<h>" + formatTimeShort(effective_elapsed_time) + "</h>" + main_instructions;
+      }
+      function create_main_trial() {
+        let trial = {
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: get_main_instructions,
+          choices: ["m", "p"],
+          trial_duration: 1000,
+          on_finish: function(data) {
+            true_elapsed_time = Date.now() - start_time;
+            effective_elapsed_time = true_elapsed_time - (accumulated_pause_time + accumulated_probe_time);
+            if (effective_elapsed_time >= block_times[curr_bell]) {
+              do_probe = true;
+              is_self_caught = false;
+              play_bell();
+              probe_type = "PROBE";
+              curr_bell += 1;
+              return;
+            }
+            if (data.response === "p") {
+              pause = true;
+            } else if (data.response === "m") {
+              is_self_caught = true;
+              do_probe = true;
+              probe_type = "SELF";
+            }
+          }
+        };
+        return trial;
+      }
+      let trial_node = {
+        timeline: [
+          create_main_trial(),
+          create_probe_timeline(),
+          create_pause_trial()
+        ],
+        loop_function: function () {
+          return (effective_elapsed_time <= total_exp_time);
+        }
+      };
+      let filename = subjectID + ".csv";
+      let send_data = {
+        type: jsPsychPipe,
+        action: "save",
+        experiment_id: JSPYSCHPIPE_ID,
+        filename: filename,
+        data_string: get_data_to_send
+      };
+      let download_trial = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<p>Do not close this tab. Thank you, the next part of the study will begin shortly.</p>`,
+                      //Click the button below to download the CSV data that was sent to OSF.</p>
+                     //<button id="download-btn">Download CSV</button>
+        choices: "NO_KEYS",
+        trial_duration: 10000,
+        // on_load: function () {
+        //   document.getElementById("download-btn").addEventListener("click", function () {
+        //     let csv = get_data_to_send();
+        //     let blob = new Blob([csv], { type: "text/csv" });
+        //     let url = window.URL.createObjectURL(blob);
+        //     let a = document.createElement("a");
+        //     a.href = url;
+        //     a.download = filename;
+        //     document.body.appendChild(a);
+        //     a.click();
+        //     document.body.removeChild(a);
+        //   });
+        // }
+      };
+      let intro = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: instructions,
+        choices: [" "],
+        on_start: function () {
+          document.addEventListener("keydown", preview_sound);
+        },
+        on_finish: function () {
+          document.removeEventListener("keydown", preview_sound);
+          start_time = Date.now();
+        }
+      };
+      function preview_sound(e) {
+        if (e.key === "s") {
+          play_bell();
+        }
+      }
+      let main_timeline = [
+        intro,
+        trial_node,
+        send_data,
+        download_trial,
+      ];
+      jsPsych.run(main_timeline);
+    } // End of runMeditationTask
+
+    /***********************
+     * METRONOME TASK CODE
+     ***********************/
+    function runMetronomeTask() {
+      // Set up the head and body for the metronome experiment.
+      document.head.innerHTML = `
+        <meta charset="UTF-8">
+        <title>MRT Experiment – Hybrid Version</title>
+        <link rel="stylesheet" href="css/jspsych.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet">
+        <style>
+          body { background-color: black; }
+          p { max-width: 750px; text-align: left; color: white; }
+          .debrief { max-width: 750px; font-size: 18px; line-height: 1.25em; text-align: left; color: white; background-color: black; padding: 20px; }
+          .probe-container { text-align: center; }
+          .probe-labels,
+          .probe-option,
+          .probe-divider,
+          .probe-instruction { color: white; }
+          .probe-option { width: 150px; text-align: center; font-size: 20pt; }
+          .probe-divider { width: 71.5px; text-align: center; font-size: 20pt; }
+          .probe-line { width: 2px; height: 25px; background-color: white; }
+          .probe-options { display: flex; justify-content: space-evenly; align-items: center; }
+          .probe-instruction { margin-top: 45px; font-size: 12pt; text-align: center; width: 600px; }
+          .plus { font-family: "Montserrat", sans-serif; font-size: 150px; font-weight: bold; position: absolute; transform: translate(-50%, -50%); color: #bbb; }
+        </style>
+      `;
+      document.body.innerHTML = `<div id="experiment-container"></div>`;
+
+      // Prevent accidental page unload.
+      window.addEventListener('beforeunload', function(e) {
+        e.preventDefault();
+        e.returnValue = '';
+      });
+      var jsPsych = initJsPsych();
+
+      // ---------------- Global Variables & Data Storage ----------------
+      //setIDfromlink();
+      let trialNum = 0;  
+      let customData = {
+        subject: [],
+        trial: [],
+        task: [],
+        trial_num: [],
+        RT_from_metronome: [],
+        omission: [],
+        performance_rating: [],
+        probe1_rt: [],
+        probe2_rt: [],
+        confidence_rating: [],
+        //probe_text: [],
+        pause_time: []
+      };
+      const lag_time = 650;
+      let tempPerformance = null;
+      let tempProbeRT1 = null;
+      let tempProbeRT2 = null;
+      let pause = false;
+      let pauseStart = 0;
+      let justPaused = false;
+      let repeatPractice = false;
+      let practiceConsecutiveMisses = 0;
+      let practiceLastRT = null;
+      let mainLastRT = null;
+
+      // ---------------- Countdown Functions ----------------
+      function add_countdown(n, l=1300) {
+        return {
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: "<p>" + n + "</p>",
+          response_ends_trial: false,
+          trial_duration: l
+        };
+      }
+      function add_countdown_pad() {
+        return {
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: "",
+          response_ends_trial: false,
+          on_start: function() { leadup_ticks(); },
+          trial_duration: 650
+        };
+      }
+      function leadup_ticks() {
+        setTimeout(() => { play_metronome_tick(); }, 650);
+        setTimeout(() => { play_metronome_tick(); }, 650 + 1300);
+        setTimeout(() => { play_metronome_tick(); }, 650 + 2*1300);
+        setTimeout(() => { play_metronome_tick(); }, 650 + 3*1300);
+      }
+
+      // ---------------- Data Saving Functions ----------------
+      function saveTappingTrial(score) {
+        trialNum++;
+        customData.subject.push(subjectID);
+        customData.trial.push(trialNum);
+        customData.task.push("metronome");
+        customData.trial_num.push(trialNum);
+        customData.RT_from_metronome.push(score);
+        customData.omission.push(score === "" ? "TRUE" : "FALSE");
+        customData.performance_rating.push("NA");
+        customData.probe1_rt.push("NA");
+        customData.probe2_rt.push("NA");
+        customData.confidence_rating.push("NA");
+        //customData.probe_text.push("NA");
+        customData.pause_time.push("NA");
+      }
+      function saveThoughtProbeTrial(confidence) {
+        trialNum++;
+        let probeText = (tempPerformance > 3) ? "On Task" : "Confident";
+        customData.subject.push(subjectID);
+        customData.trial.push(trialNum);
+        customData.task.push("thought_probe");
+        customData.trial_num.push(trialNum);
+        customData.RT_from_metronome.push("NA");
+        customData.omission.push("FALSE");
+        customData.performance_rating.push(tempPerformance);
+        customData.probe1_rt.push(tempProbeRT1);
+        customData.probe2_rt.push(tempProbeRT2);
+        customData.confidence_rating.push(confidence);
+        //customData.probe_text.push(probeText);
+        customData.pause_time.push("NA");
+        tempPerformance = null;
+        tempProbeRT1 = null;
+        tempProbeRT2 = null;
+      }
+      function savePauseTrial(pauseDuration) {
+        trialNum++;
+        customData.subject.push(subjectID);
+        customData.trial.push(trialNum);
+        customData.task.push("pause");
+        customData.trial_num.push(trialNum);
+        customData.RT_from_metronome.push("NA");
+        customData.omission.push("pause");
+        customData.performance_rating.push("NA");
+        customData.probe1_rt.push("NA");
+        customData.probe2_rt.push("NA");
+        customData.confidence_rating.push("NA");
+        //customData.probe_text.push("NA");
+        customData.pause_time.push(pauseDuration.toFixed(3));
+      }
+      function convertToCSV(dataObj) {
+        let columns = Object.keys(dataObj);
+        let header = columns.join("\t") + "\n";
+        let numRows = dataObj[columns[0]].length;
+        let rows = [];
+        for (let i = 0; i < numRows; i++) {
+          let row = columns.map(col => dataObj[col][i]);
+          rows.push(row.join("\t"));
+        }
+        return header + rows.join("\n");
+      }
+      function play_metronome_tick() {
+        const audio = new Audio('./sounds/metronomeMono.mp3');
+        audio.play();
+      }
+
+      // ---------------- Pause Functionality ----------------
+      let pause_trial = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `<p style='text-align:center;font-size:100px;'>⏸️</p>
+                     <p style='text-align:center;'>Press <strong>[P]</strong> to continue.</p>`,
+        choices: ["p"],
+        response_ends_trial: true,
+        trial_duration: null,
+        on_start: function() {
+          pauseStart = performance.now();
+        },
+        on_finish: function() {
+          pause = false;
+          justPaused = true;
+          let pauseEnd = performance.now();
+          let pauseSec = (pauseEnd - pauseStart) / 1000;
+          savePauseTrial(pauseSec);
+        }
+      };
+      let pause_node = {
+        timeline: [pause_trial],
+        conditional_function: function() { return pause; }
+      };
+
+      // ---------------- PRACTICE TAPPING ----------------
+      let practice_tapping_main = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "",
+        choices: [" ", "p"],
+        response_ends_trial: true,
+        trial_duration: 1300,
+        on_start: function() {
+          setTimeout(() => { play_metronome_tick(); }, 650);
+        },
+        on_finish: function(data) {
+          if(data.response === "p") {
+            pause = true;
+            practiceLastRT = null; 
+          } else if(data.response === " ") {
+            practiceLastRT = data.rt;
+          } else {
+            practiceLastRT = null;
+          }
+        }
+      };
+      let practice_tapping_pad = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function() {
+          if(practiceLastRT === null) {
+            return "";
+          }
+          return '<div class="plus">+</div>';
+        },
+        choices: [" "],
+        response_ends_trial: false,
+        trial_duration: function() {
+          if(practiceLastRT === null) {
+            return 0;
+          }
+          let leftover = 1300 - practiceLastRT;
+          return leftover > 0 ? leftover : 0;
+        },
+        on_finish: function() {
+          if (pause || justPaused) {
+            justPaused = false;
+            return;
+          }
+          if(practiceLastRT === null) {
+            saveTappingTrial("");
+            practiceConsecutiveMisses++;
+          } else {
+            let score = practiceLastRT - lag_time;
+            saveTappingTrial(score);
+            practiceConsecutiveMisses = 0;
+          }
+        }
+      };
+      let practice_pad_node = {
+        timeline: [practice_tapping_pad],
+        conditional_function: function() {
+          return !pause;
+        }
+      };
+      let practice_tapping_trial = {
+        timeline: [practice_tapping_main, pause_node, practice_pad_node]
+      };
+      let practice_miss_node = {
+        timeline: [
+          {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: "<p>You haven't pressed SPACE for the last 4 trials.<br>Remember to press SPACE in time with the metronome.<br><br>Press SPACE to continue.</p>",
+            choices: [" "],
+            on_finish: function() {
+              practiceConsecutiveMisses = 0;
+            }
+          }
+        ],
+        conditional_function: function() {
+          return practiceConsecutiveMisses >= 4;
+        }
+      };
+      const numPracticeTrials = 30;
+      let practice_trial_counter = 0;
+      let practice_block = {
+        timeline: [
+          {
+            timeline: [practice_tapping_trial, practice_miss_node],
+            loop_function: function() {
+              practice_trial_counter++;
+              return (practice_trial_counter < numPracticeTrials);
+            }
+          }
+        ]
+      };
+      let practice_prompt = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "<p>The practice trials are now over.<br><br>If you would like to review the instructions and redo the practice trials, press <strong>[Left Arrow]</strong>.<br><br>If you are ready to begin the main experiment, press <strong>[Right Arrow]</strong>.</p>",
+        choices: ["arrowleft", "arrowright"],
+        on_finish: function(data) {
+          if(data.response === "arrowleft") {
+            repeatPractice = true;
+            practice_trial_counter = 0;
+            trialNum = 0;
+            practiceConsecutiveMisses = 0;
+          } else {
+            repeatPractice = false;
+          }
+        }
+      };
+      let practice_node = {
+        timeline: [practice_block, practice_prompt],
+        loop_function: function() { return repeatPractice; }
+      };
+
+      // ---------------- Thought Probe Block ----------------
+      let thought_probe_block = {
+        timeline: [
+          {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `
+                <p style="font-size: 20pt; text-align: left;">Question 1: How on task were you just before this probe?</p>
+                <div style="text-align: center; color: white;">
+                  <div style="display: inline-block; width: 1050px;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                          <div style="width: 150px; text-align: center; font-size:20pt;">Least on Task</div>
+                          <div style="width: 225px;"></div>
+                          <div style="width: 150px; text-align: center; font-size:20pt; display: flex; align-items: center; justify-content: center">Middle</div>
+                          <div style="width: 225px;"></div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">Most on Task</div>
+                      </div>
+                      <div style="display: flex; justify-content: space-evenly; align-items: center;">
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[1]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[2]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[3]</div>
+                          <div style="width: 71.5px; text-align: center; font-size:20pt;"></div>
+                          <div style="width: 2px; height: 25px; background-color: white;"></div>
+                          <div style="width: 71.5px; text-align: center; font-size:20pt;"></div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[4]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[5]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[6]</div>
+                      </div>
+                      <div style="display: flex; justify-content: center; margin-top: 45px;">
+                          <div style="width: 600px; text-align: center; font-size:12pt;">Press a key (1–6) for your response.</div>
+                      </div>
+                  </div>
+                </div>`,
+            choices: ["1", "2", "3", "4", "5", "6"],
+            data: { probe_question: 1, thought_probe: 1 },
+            on_finish: function(data) {
+              tempPerformance = data.response;
+              tempProbeRT1 = (data.rt / 1000).toFixed(3);
+            }
+          },
+          {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `
+                
+                <p style="font-size: 20pt; text-align: left;">How confident are you in the task focus rating you just provided?</p>
+                <div style="text-align: center; color: white;">
+                  <div style="display: inline-block; width: 1050px;">
+                      <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                          <div style="width: 150px; text-align: center; font-size:20pt;">Least Confident</div>
+                          <div style="width: 225px;"></div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">Middle</div>
+                          <div style="width: 225px;"></div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">Most Confident</div>
+                      </div>
+                      <div style="display: flex; justify-content: space-evenly; align-items: center;">
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[1]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[2]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[3]</div>
+                          <div style="width: 71.5px; text-align: center; font-size:20pt;"></div>
+                          <div style="width: 2px; height: 25px; background-color: white;"></div>
+                          <div style="width: 71.5px; text-align: center; font-size:20pt;"></div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[4]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[5]</div>
+                          <div style="width: 150px; text-align: center; font-size:20pt;">[6]</div>
+                      </div>
+                      <div style="display: flex; justify-content: center; margin-top: 45px;">
+                          <div style="width: 600px; text-align: center; font-size:12pt;">Press a key (1–6) for your response.</div>
+                      </div>
+                  </div>
+                </div>`,
+            choices: ["1", "2", "3", "4", "5", "6"],
+            data: { probe_question: 2, thought_probe: 1 },
+            on_finish: function(data) {
+              tempProbeRT2 = (data.rt / 1000).toFixed(3);
+              saveThoughtProbeTrial(data.response);
+            }
+          },
+          {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `<p style="font-size:24pt; text-align:center;">Press the spacebar to continue.</p>`,
+            choices: [" "]
+          },
+          {
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: "",
+            choices: [" "],
+            trial_duration: 650,
+            prompt: "<img src='images/sound-icon.png'>",
+            response_ends_trial: false,
+            data: { thought_probe: 1 }
+          }
+        ]
+      };
+      let tapping_main = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "", 
+        choices: [" ", "p"],
+        response_ends_trial: true,
+        trial_duration: 1300,
+        on_start: function() {
+          setTimeout(() => { play_metronome_tick(); }, 650);
+        },
+        on_finish: function(data) {
+          if(data.response === "p") {
+            pause = true;
+            mainLastRT = null;
+          } else if(data.response === " ") {
+            mainLastRT = data.rt;
+          } else {
+            mainLastRT = null;
+          }
+        }
+      };
+      let tapping_pad = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function() {
+          if(mainLastRT === null) {
+            return "";
+          }
+          return '<div class="plus">+</div>';
+        },
+        choices: [" "],
+        response_ends_trial: false,
+        trial_duration: function() {
+          if(mainLastRT === null) {
+            return 0;
+          }
+          let leftover = 1300 - mainLastRT;
+          return leftover > 0 ? leftover : 0;
+        },
+        on_finish: function() {
+          if (pause || justPaused) {
+            justPaused = false;
+            return;
+          }
+          if(mainLastRT === null) {
+            saveTappingTrial("");
+          } else {
+            let score = mainLastRT - lag_time;
+            saveTappingTrial(score);
+          }
+        }
+      };
+      let main_pad_node = {
+        timeline: [tapping_pad],
+        conditional_function: function() {
+          return !pause;
+        }
+      };
+      let tapping_trial = {
+        timeline: [tapping_main, pause_node, main_pad_node]
+      };
+      function generateJitteredIntervals(numBlocks, baseTime, jitterRange) {
+        let jitters = [];
+        for (let i = 0; i < numBlocks; i++) {
+          jitters.push(Math.random() * 2 * jitterRange - jitterRange);
+        }
+        const sumJitters = jitters.reduce((acc, val) => acc + val, 0);
+        const avgJitter = sumJitters / numBlocks;
+        const adjustedJitters = jitters.map(x => x - avgJitter);
+        return adjustedJitters.map(j => baseTime + j);
+      }
+      let mrt_main = [];
+      const numBlocks = 2;  // For quick testing; change to desired value.
+      const baseTime = 40;  
+      const jitterRange = 15;
+      const intervals = generateJitteredIntervals(numBlocks, baseTime, jitterRange);
+      for (let i = 0; i < numBlocks; i++) {
+        let intervalSeconds = intervals[i];
+        let nTappingTrials = Math.round((intervalSeconds * 1000) / 1300);
+        for (let j = 0; j < nTappingTrials; j++) {
+          mrt_main.push(tapping_trial);
+        }
+        mrt_main.push(thought_probe_block);
+      }
+      let countdown_main = [
+        add_countdown("Main trials starting in 3..."),
+        add_countdown("Main trials starting in 2..."),
+        add_countdown("Main trials starting in 1..."),
+        add_countdown("Go!", 650)
+      ];
+      const osfSaveData = {
+        type: jsPsychPipe,
+        action: "save",
+        experiment_id: "ZjiIhjj4eemC",
+        filename: subjectID + ".tsv",
+        data_string: () => convertToCSV(customData)
+      };
+      // function downloadCSV() {
+      //   const csv = convertToCSV(customData);
+      //   const blob = new Blob([csv], { type: 'text/csv' });
+      //   const url = URL.createObjectURL(blob);
+      //   const a = document.createElement('a');
+      //   a.href = url;
+      //   a.download = "experiment_data.csv";
+      //   document.body.appendChild(a);
+      //   a.click();
+      //   document.body.removeChild(a);
+      // }
+      let instructions = {
+        type: jsPsychInstructions,
+        pages: [
+          `<p>Please note that this part of the experiment requires <strong>headphones or speakers.</strong></p>
+              <p>You can use the arrow keys to navigate through the instructions.<br>
+              Press the RIGHT ARROW to continue and the LEFT ARROW to go back.</p>
+              <p>For this experiment you will hear a metronome sound presented at a constant rate via your headphones.
+              Your task is to press the <strong>SPACEBAR</strong> in synchrony with the metronome so that you press the spacebar exactly when the metronome sound is played.</p>
+              <p>Your accuracy is determined by how close in time your responses are to the metronome. Sometimes you will be asked to rate how on task you were.</p>
+              <p>If you were less focused than what you consider your middle level of focus pick and option 1-3.</p>
+              <p>If you were more on task than your middle level of focus, then pick a number between 4-6 with respect to how on task you were.</p>
+              <p>Please use the full range of numbers to indicate accordingly whether you were the most or least on task, just before we asked.</p>
+              <p>If you get distracted, you may press <strong>[P]</strong> to pause (pausing will reset the current trial).</p>
+              <p>Press "Start" to begin the practice trials.</p>`
+        ],
+        show_clickable_nav: true,
+        key_forward: "arrowright",
+        key_backward: "arrowleft",
+        button_label_last: "START",
+        button_label_last_background_color: "#4CAF50",
+        button_label_last_font_color: "white"
+      };
+      // let demographics = {
+      //   type: jsPsychSurveyHtmlForm,
+      //   preamble: "<p>Please answer the following demographic questions.</p>",
+      //   html: `<hr>
+      //           <p style="font-size:18px; text-align:left">
+      //             <span style="margin-right:10px">I identify my gender as:</span>
+      //             <input name="gender" type="text">
+      //           </p>
+      //           <p style="font-size:18px; text-align:left">
+      //             <span style="margin-right:10px">Age:</span>
+      //             <input name="age" type="text">
+      //           </p>`
+      // };
+      let debrief = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function() {
+          return `<div class="debrief">
+                      <p>Do not close this tab. Thank you, the next part of the study will begin shortly.</p>
+                    </div>`;
+                    // <button onclick="downloadCSV()" style="font-size:18px; padding:10px; background:blue; color:white; border-radius:5px;">
+                    //   Download Data
+                    // </button>
+        },
+        choices: ["NO_KEYS"]
+      };
+      let timeline = [];
+      // 1. Instructions
+      timeline.push(instructions);
+      // 2. Countdown before practice
+      timeline.push(add_countdown_pad());
+      timeline.push(add_countdown("Practice trials starting in 3..."));
+      timeline.push(add_countdown("Practice trials starting in 2..."));
+      timeline.push(add_countdown("Practice trials starting in 1..."));
+      timeline.push(add_countdown("Go!", 650));
+      // 3. Practice node
+      timeline.push(practice_node);
+      // 4. Countdown before main
+      timeline = timeline.concat(countdown_main);
+      // 5. Main MRT block
+      timeline = timeline.concat(mrt_main);
+      // 6. Save data
+      timeline.push(osfSaveData);
+      // 7. Demographic survey
+      //timeline.push(demographics);
+      // 8. Debrief
+      timeline.push(debrief);
+
+      jsPsych.run(timeline);
+    } // End of runMetronomeTask
+
+    /***********************
+     * START THE EXPERIMENT
+     ***********************/
+    runMeditationTask();
+  </script>
+</body>
+</html>
