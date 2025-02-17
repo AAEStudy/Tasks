@@ -566,7 +566,14 @@
         e.preventDefault();
         e.returnValue = '';
       });
-      var jsPsych = initJsPsych();
+      var jsPsych = initJsPsych({
+        on_finish: function() {
+          // Add a delay before redirecting.
+          setTimeout(function() {
+            window.location.replace("https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g?id=" + subjectID);
+          }, 500);
+        }
+      });
 
       // ---------------- Global Variables & Data Storage ----------------
       //setIDfromlink();
