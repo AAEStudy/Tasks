@@ -32,29 +32,15 @@
     /***********************
      * CLEANUP FUNCTION
      ***********************/
-    let subjectID = 'subject2';
-    function setIDfromlink(){
+    //get subjectID from link
       // Get the full query string from the URL
-      const queryString = window.location.search;
-
+    const queryString = window.location.search;
       // Parse the query string
-      const urlParams = new URLSearchParams(queryString);
-      const subjectID = 'subject2';
-      // Extract the subjectId parameter (make sure the parameter name matches what Qualtrics sends)
-      
-      //uncomment this line to get id from link
-      //const subjectID = urlParams.get('subjectID');
+    const urlParams = new URLSearchParams(queryString);
 
-      // Check if subjectId exists; if not, you might want to handle the error
-      if (!subjectID) {
-        console.error("No subjectId found in the URL!");
-      } else {
-        console.log("Subject ID:", subjectID);
-      }
-    }
-   
-
-    // You can now use 'subjectId' in your jsPsych timeline or data object as needed.
+       // Extract the subjectId parameter (make sure the parameter name matches what Qualtrics sends)
+    const subjectID = urlParams.get('subjectID');
+    //e.g., to manually set if just testing let subjectID = 'subject2'; 
 
     function cleanupJsPsych() {
       // Remove the jsPsych instance and clear the experiment container.
