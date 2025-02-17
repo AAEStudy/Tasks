@@ -568,9 +568,11 @@
       });
       var jsPsych = initJsPsych({
         on_finish: function() {
+          // Remove the beforeunload listener
+          window.removeEventListener('beforeunload', handleBeforeUnload);
           // Add a delay before redirecting.
           setTimeout(function() {
-            window.location.replace("https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g?id=" + subjectID);
+            window.location.replace("https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g");
           }, 500);
         }
       });
