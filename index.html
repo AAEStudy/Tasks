@@ -562,10 +562,10 @@
       document.body.innerHTML = `<div id="experiment-container"></div>`;
 
       // Prevent accidental page unload.
-      window.addEventListener('beforeunload', function(e) {
-        e.preventDefault();
-        e.returnValue = '';
-      });
+      //window.addEventListener('beforeunload', function(e) {
+        //e.preventDefault();
+        //e.returnValue = '';
+      //});
       var jsPsych = initJsPsych();
 
       // ---------------- Global Variables & Data Storage ----------------
@@ -1073,7 +1073,7 @@
         type: jsPsychCallFunction,
         func: function() {
           // Remove the beforeunload listener so it doesn't block the redirect.
-          window.removeEventListener('beforeunload', handleBeforeUnload);
+          //window.removeEventListener('beforeunload', handleBeforeUnload);
           window.location.href = "https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g?id=" + subjectID;
         }
       };
