@@ -495,7 +495,7 @@
                       //Click the button below to download the CSV data that was sent to OSF.</p>
                      //<button id="download-btn">Download CSV</button>
         choices: "NO_KEYS",
-        trial_duration: 10000
+        trial_duration: 5000
         // on_load: function () {
         //   document.getElementById("download-btn").addEventListener("click", function () {
         //     let csv = get_data_to_send();
@@ -1091,7 +1091,7 @@
                     // </button>
         },
         choices: ["NO_KEYS"],
-        trial_duration: 10000,
+        trial_duration: 3000,
         on_finish: function() {
         // Remove the beforeunload listener once debrief is complete
           window.removeEventListener('beforeunload', handleBeforeUnload);
