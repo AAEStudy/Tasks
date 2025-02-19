@@ -841,8 +841,14 @@
           {
             type: jsPsychHtmlKeyboardResponse,
             stimulus: `
-                <p style="font-size: 20pt; text-align: left;">Question 1: How on task were you just before this probe?</p>
                 <div style="text-align: center; color: white;">
+                  <!-- Wrap the question text in the same container -->
+                  <div style="display: inline-block; width: 1050px; text-align: left;">
+                    <p style="font-size: 20pt; margin: 0;">
+                      1. How on task were you just before this screen appeared? 
+                    </p></p></p></p>
+                  </div>
+                  <!-- The response options container -->
                   <div style="display: inline-block; width: 1050px;">
                       <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                           <div style="width: 150px; text-align: center; font-size:20pt;">Least on Task</div>
@@ -878,8 +884,14 @@
             type: jsPsychHtmlKeyboardResponse,
             stimulus: `
                 
-                <p style="font-size: 20pt; text-align: left;">How confident are you in the task focus rating you just provided?</p>
                 <div style="text-align: center; color: white;">
+                  <!-- Wrap the question text in the same container -->
+                  <div style="display: inline-block; white-space: nowrap; width: 1050px; text-align: left;">
+                    <p style="font-size: 20pt; margin: 0;">
+                      2. How confident are you the task focus rating you just provided is accurate?
+                    </p></p></p></p>
+                  </div>
+                  <!-- The response options container -->
                   <div style="display: inline-block; width: 1050px;">
                       <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                           <div style="width: 150px; text-align: center; font-size:20pt;">Least Confident</div>
