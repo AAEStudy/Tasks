@@ -41,6 +41,12 @@
       
       //uncomment this line to get id from link
     let subjectID = urlParams.get('subjectID');
+    if (!subjectID) {
+         // Generate a random 4-digit number
+        subjectID = 'random' + Math.floor(10000 + Math.random() * 90000);
+      } else {
+        console.log("Subject ID:", subjectID);
+      }
     // function setIDfromlink(){
     //   // Get the full query string from the URL
     //   const queryString = window.location.search;
@@ -54,13 +60,7 @@
     //   const subjectID = urlParams.get('subjectID');
 
       // Check if subjectId exists; if not, you might want to handle the error
-      if (!subjectID) {
-         // Generate a random 4-digit number
-        subjectID = 'random' + Math.floor(10000 + Math.random() * 90000);
-      } else {
-        console.log("Subject ID:", subjectID);
-      }
-    }
+      
    
 
     // You can now use 'subjectId' in your jsPsych timeline or data object as needed.
