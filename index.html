@@ -32,22 +32,31 @@
     /***********************
      * CLEANUP FUNCTION
      ***********************/
-    let subjectID = '';
-    function setIDfromlink(){
-      // Get the full query string from the URL
-      const queryString = window.location.search;
+    const queryString = window.location.search;
 
       // Parse the query string
-      const urlParams = new URLSearchParams(queryString);
+    const urlParams = new URLSearchParams(queryString);
       //const subjectID = 'subject15';
       // Extract the subjectId parameter (make sure the parameter name matches what Qualtrics sends)
       
       //uncomment this line to get id from link
-      const subjectID = urlParams.get('subjectID');
+    let subjectID = urlParams.get('subjectID');
+    // function setIDfromlink(){
+    //   // Get the full query string from the URL
+    //   const queryString = window.location.search;
+
+    //   // Parse the query string
+    //   const urlParams = new URLSearchParams(queryString);
+    //   //const subjectID = 'subject15';
+    //   // Extract the subjectId parameter (make sure the parameter name matches what Qualtrics sends)
+      
+    //   //uncomment this line to get id from link
+    //   const subjectID = urlParams.get('subjectID');
 
       // Check if subjectId exists; if not, you might want to handle the error
       if (!subjectID) {
-        console.error("No subjectId found in the URL!");
+         // Generate a random 4-digit number
+        subjectID = 'random' + Math.floor(10000 + Math.random() * 90000);
       } else {
         console.log("Subject ID:", subjectID);
       }
@@ -87,7 +96,7 @@
        *              MEDITATION TASK CODE
        ****************************************************/
       // ---------------- Experiment-wide variables ----------------
-      setIDfromlink();// need to uncomment to setid
+      //setIDfromlink();// need to uncomment to setid
       const JSPYSCHPIPE_ID = "CEasZZbmyoOh";
       let total_exp_time = 1000 * 60 * 2; // 2 minutes
       let pauses = 0;
@@ -597,7 +606,7 @@
       var jsPsych = initJsPsych();
 
       // ---------------- Global Variables & Data Storage ----------------
-      setIDfromlink();
+      //setIDfromlink();
       let trialNum = 0;  
       let probeBlockCounter = 0; //for the instructed response option
       let customData = {
