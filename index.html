@@ -109,7 +109,7 @@
       // ---------------- Experiment-wide variables ----------------
       //setIDfromlink();// need to uncomment to setid
       const JSPYSCHPIPE_ID = "CEasZZbmyoOh";
-      let total_exp_time = 1000 * 60 * 2; // 2 minutes
+      let total_exp_time = 1000 * 60 * 10; // x10 = 10 minutes
       let pauses = 0;
       let pause = false;
       let is_self_caught = false;
@@ -1110,7 +1110,7 @@
           {
             timeline: [instructed_response_trial],
             conditional_function: function() {
-              return (probeBlockCounter % 2 === 0);//only occurs when trial count is divisible by 2
+              return (probeBlockCounter % 10 === 0);//only occurs when trial count is divisible by 10, so it occurs on every 10th block.
             }
           },
           {
@@ -1208,7 +1208,7 @@
       }
       
       let mrt_main = [];
-      const numBlocks = 4;  // For quick testing; change to desired value.
+      const numBlocks = 30;  // 30 blocks= 20 minutes in main trials. For quick testing; change to desired value.
       const baseTime = 40;  
       const jitterRange = 15;
       const intervals = generateJitteredIntervals(numBlocks, baseTime, jitterRange);
@@ -1227,7 +1227,7 @@
         
         // After finishing half the blocks, insert a break.
         // (For example, if numBlocks is 4, then after block 0 or block 1?
-        // Here we use: if i === Math.floor(numBlocks / 2) - 1)
+        // Here we use: if i === Math.ceil(numBlocks / 2) - 1) ceil rounds up no matter what the decimal is
         if (i === Math.ceil(numBlocks / 2) - 1) {
           mrt_main.push(break_trial);
           mrt_main.push(add_countdown_pad());
