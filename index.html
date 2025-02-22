@@ -634,6 +634,7 @@
       let justPaused = false;
       let repeatPractice = false;
       let practiceConsecutiveMisses = 0;
+      let mainConsecutiveMisses = 0;
       let practiceLastRT = null;
       let mainLastRT = null;
 
@@ -957,6 +958,19 @@
               customData.instructed_response.push(data.response);
             }
           };
+      let main_miss_node = {
+        timeline: [{
+          type: jsPsychHtmlKeyboardResponse,
+          stimulus: "<p>You haven't pressed SPACE for the last 4 trials.<br>Remember to press SPACE in time with the metronome.<br><br>Press SPACE to continue.</p>",
+          choices: [" "],
+          on_finish: function() {
+            mainConsecutiveMisses = 0;
+          }
+        }],
+        conditional_function: function() {
+          return mainConsecutiveMisses >= 4;
+        }
+      };
 
       // ---------------- Thought Probe Block ----------------
       let thought_probe_block = {
@@ -1127,9 +1141,11 @@
           }
           if(mainLastRT === null) {
             saveTappingTrial("");
+            mainConsecutiveMisses++; // Increment counter on a no response
           } else {
             let score = mainLastRT - lag_time;
             saveTappingTrial(score);
+            mainConsecutiveMisses = 0;  // Reset counter on a valid response
           }
         }
       };
@@ -1171,6 +1187,7 @@
         // Add tapping trials for the entire block:
         for (let j = 0; j < nTappingTrials; j++) {
           mrt_main.push(tapping_trial);
+          mrt_main.push(main_miss_node);  // Check and display miss screen if needed
         }
         
         // Add the thought probe for this block:
