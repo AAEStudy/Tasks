@@ -72,6 +72,11 @@
       }
       document.body.innerHTML = "";
     }
+    // Prevent accidental page unload.
+    function handleBeforeUnload(e) {
+        e.preventDefault();
+        e.returnValue = '';
+      };
 
     /***********************
      * MEDITATION TASK CODE
@@ -598,12 +603,24 @@
       `;
       document.body.innerHTML = `<div id="experiment-container"></div>`;
 
-      // Prevent accidental page unload.
-      window.addEventListener('beforeunload', function(e) {
-        e.preventDefault();
-        e.returnValue = '';
+      // // Prevent accidental page unload.
+      // window.addEventListener('beforeunload', function(e) {
+      //   e.preventDefault();
+      //   e.returnValue = '';
+      // });
+      // var jsPsych = initJsPsych();
+
+      // Add the listener using the named function
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      var jsPsych = initJsPsych({
+        on_finish: function() {
+          // Add a delay before redirecting.
+          setTimeout(function() {
+            window.location.replace("https://usf.az1.qualtrics.com/jfe/form/SV_eVSsVNyTwJPVr7g");
+          }, 500);
+        }
       });
-      var jsPsych = initJsPsych();
 
       // ---------------- Global Variables & Data Storage ----------------
       //setIDfromlink();
