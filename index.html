@@ -82,6 +82,8 @@
     //     e.preventDefault();
     //     e.returnValue = '';
     //   };
+    const metronomeAudio = new Audio('./sounds/metronomeMono.mp3');
+    metronomeAudio.load();
     
 
     /***********************
@@ -761,8 +763,8 @@
         return header + rows.join("\n");
       }
       function play_metronome_tick() {
-        const audio = new Audio('./sounds/metronomeMono.mp3');
-        audio.play();
+        metronomeAudio.currentTime = 0;
+        metronomeAudio.play();
       }
 
       // ---------------- Pause Functionality ----------------
