@@ -82,8 +82,13 @@
     //     e.preventDefault();
     //     e.returnValue = '';
     //   };
+    //preload sounds for playback
     const metronomeAudio = new Audio('./sounds/metronomeMono.mp3');
     metronomeAudio.load();
+
+    const bellAudio = new Audio('./bell.wav');
+    bellAudio.load();
+    bellAudio.volume = 0.65;
     
 
     /***********************
@@ -222,8 +227,9 @@
         return minutes + ":" + (seconds < 10 ? "0" + seconds : seconds);
       }
       function play_bell() {
-        const audio = new Audio('./bell.wav');
-        audio.play();
+        // Reset playback position and play the preloaded bell sound
+        bellAudio.currentTime = 0;
+        bellAudio.play();
       }
       
       function createEmptyRow() {
