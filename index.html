@@ -88,7 +88,7 @@
 
     const bellAudio = new Audio('./bell.wav');
     bellAudio.load();
-    bellAudio.volume = 0.4;
+
     
 
     /***********************
@@ -228,6 +228,7 @@
       }
       function play_bell() {
         // Reset playback position and play the preloaded bell sound
+        bellAudio.volume = 0.2;
         bellAudio.currentTime = 0;
         bellAudio.play();
       }
